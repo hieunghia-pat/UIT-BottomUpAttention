@@ -7,11 +7,11 @@
 
 
 # Example:
-# ./tools/generate_tsv.py --gpu 0,1,2,3,4,5,6,7 --cfg experiments/cfgs/faster_rcnn_end2end_resnet.yml --def models/vg/ResNet-101/faster_rcnn_end2end/test.prototxt --out test2014_resnet101_faster_rcnn_genome.tsv --net data/faster_rcnn_models/resnet101_faster_rcnn_final.caffemodel --split coco_test2014
+# python3 tools/generate_tsv.py --gpu 0 --cfg experiments/cfgs/faster_rcnn_end2end_resnet.yml --def models/vg/ResNet-101/faster_rcnn_end2end_final/test.prototxt --out uitviic_train_resnet101_faster_rcnn_genome.tsv --net data/faster_rcnn_models/resnet101_faster_rcnn_final.caffemodel --split /mnt/f9e5fe40-5d81-46dc-8450-9c1e67eff197/Projects/object_relation_transformer/data/train.json
 
 
 import _init_paths
-from fast_rcnn.config import cfg, cfg_from_file
+from fast_rcnn.config import cfg, cfg_from_file, cfg_from_list
 from fast_rcnn.test import im_detect,_get_blobs
 from fast_rcnn.nms_wrapper import nms
 from utils.timer import Timer
@@ -30,7 +30,6 @@ import json
 
 csv.field_size_limit(sys.maxsize)
 
-
 FIELDNAMES = ['image_id', 'image_w','image_h','num_boxes', 'boxes', 'features']
 
 # Settings for the number of features per image. To re-create pretrained features with 36 features
@@ -38,8 +37,11 @@ FIELDNAMES = ['image_id', 'image_w','image_h','num_boxes', 'boxes', 'features']
 MIN_BOXES = 10
 MAX_BOXES = 100
 
+BASE_DIR = "/mnt/f9e5fe40-5d81-46dc-8450-9c1e67eff197/Projects/UIT-ViIC"
+
 def load_image_ids(split_name):
     ''' Load a list of (path,image_id tuples). Modify this to suit your data locations. '''
+    '''
     split = []
     if split_name == 'coco_test2014':
       with open('/data/coco/annotations/image_info_test2014.json') as f:
@@ -62,9 +64,18 @@ def load_image_ids(split_name):
           filepath = os.path.join('/data/visualgenome/', item['url'].split('rak248/')[-1])
           split.append((filepath,image_id))      
     else:
-      print 'Unknown split'
-    return split
+      print('Unknown split')
+    '''
+    split = []
+    with open(split_name, "r") as file:
+        data = json.load(file)
+        for image in data["images"]:
+            id = image["id"]
+            filepath, filename = image["filepath"], image["filename"]
+            img_dir = os.path.join(BASE_DIR, filepath, filename)
+            split.append((img_dir, id))
 
+    return split
     
 def get_detections_from_im(net, im_file, image_id, conf_thresh=0.2):
 
@@ -148,9 +159,9 @@ def generate_tsv(gpu_id, prototxt, weights, image_ids, outfile):
                 found_ids.add(int(item['image_id']))
     missing = wanted_ids - found_ids
     if len(missing) == 0:
-        print 'GPU {:d}: already completed {:d}'.format(gpu_id, len(image_ids))
+        print('GPU {:d}: already completed {:d}'.format(gpu_id, len(image_ids)))
     else:
-        print 'GPU {:d}: missing {:d}/{:d}'.format(gpu_id, len(missing), len(image_ids))
+        print('GPU {:d}: missing {:d}/{:d}'.format(gpu_id, len(missing), len(image_ids)))
     if len(missing) > 0:
         caffe.set_mode_gpu()
         caffe.set_device(gpu_id)
@@ -165,9 +176,9 @@ def generate_tsv(gpu_id, prototxt, weights, image_ids, outfile):
                     writer.writerow(get_detections_from_im(net, im_file, image_id))
                     _t['misc'].toc()
                     if (count % 100) == 0:
-                        print 'GPU {:d}: {:d}/{:d} {:.3f}s (projected finish: {:.2f} hours)' \
-                              .format(gpu_id, count+1, len(missing), _t['misc'].average_time, 
-                              _t['misc'].average_time*(len(missing)-count)/3600)
+                        print('GPU {:d}: {:d}/{:d} {:.3f}s (projected finish: {:.2f} hours)'
+                                .format(gpu_id, count+1, len(missing), _t['misc'].average_time, 
+                                _t['misc'].average_time*(len(missing)-count)/3600))
                     count += 1
 
                     
@@ -187,7 +198,7 @@ def merge_tsvs():
                     try:
                       writer.writerow(item)
                     except Exception as e:
-                      print e                           
+                      print(e)
 
                       
      
