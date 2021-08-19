@@ -163,7 +163,7 @@ def generate_tsv(gpu_id, prototxt, weights, image_ids, outfile):
     else:
         print('GPU {:d}: missing {:d}/{:d}'.format(gpu_id, len(missing), len(image_ids)))
     if len(missing) > 0:
-        caffe.set_mode_gpu()
+        caffe.set_mode_cpu()
         caffe.set_device(gpu_id)
         net = caffe.Net(prototxt, caffe.TEST, weights=weights)
         with open(outfile, 'ab') as tsvfile:
@@ -180,9 +180,6 @@ def generate_tsv(gpu_id, prototxt, weights, image_ids, outfile):
                                 .format(gpu_id, count+1, len(missing), _t['misc'].average_time, 
                                 _t['misc'].average_time*(len(missing)-count)/3600))
                     count += 1
-
-                    
-
 
 def merge_tsvs():
     test = ['/work/data/tsv/test2015/resnet101_faster_rcnn_final_test.tsv.%d' % i for i in range(8)]
