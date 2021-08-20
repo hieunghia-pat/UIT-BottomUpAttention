@@ -1,16 +1,16 @@
-#!/usr/bin/env python
-
-
 """Generate bottom-up attention features as a tsv file. Can use multiple gpus, each produces a 
    separate tsv file that can be merged later (e.g. by using merge_tsv function). 
    Modify the load_image_ids script as necessary for your data location. """
 
-
 # Example:
-# python3 tools/generate_tsv.py --gpu 0 --cfg experiments/cfgs/faster_rcnn_end2end_resnet.yml --def models/vg/ResNet-101/faster_rcnn_end2end_final/test.prototxt --out uitviic_train_resnet101_faster_rcnn_genome.tsv --net data/faster_rcnn_models/resnet101_faster_rcnn_final.caffemodel --split /mnt/f9e5fe40-5d81-46dc-8450-9c1e67eff197/Projects/object_relation_transformer/data/train.json
+# python tools/generate_tsv.py --gpu 0 --cfg experiments/cfgs/faster_rcnn_end2end_resnet.yml --def models/vg/ResNet-101/faster_rcnn_end2end_final/test.prototxt --out uitviic_train_resnet101_faster_rcnn_genome.tsv --net data/faster_rcnn_models/resnet101_faster_rcnn_final.caffemodel --split /mnt/f9e5fe40-5d81-46dc-8450-9c1e67eff197/Projects/object_relation_transformer/data/train.json
 
-
+import sys
 import _init_paths
+
+sys.path = _init_paths.get_additional_path()
+sys.path = ["/content/UIT-BottomUpAttention/", "/content/UIT-BottomUpAttention/lib"] + sys.path
+
 from fast_rcnn.config import cfg, cfg_from_file, cfg_from_list
 from fast_rcnn.test import im_detect,_get_blobs
 from fast_rcnn.nms_wrapper import nms
