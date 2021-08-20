@@ -37,9 +37,7 @@ FIELDNAMES = ['image_id', 'image_w','image_h','num_boxes', 'boxes', 'features']
 MIN_BOXES = 10
 MAX_BOXES = 100
 
-BASE_DIR = "/mnt/f9e5fe40-5d81-46dc-8450-9c1e67eff197/Projects/UIT-ViIC"
-
-def load_image_ids(split_name):
+def load_image_ids(base_dir, split_name):
     ''' Load a list of (path,image_id tuples). Modify this to suit your data locations. '''
     '''
     split = []
@@ -72,7 +70,7 @@ def load_image_ids(split_name):
         for image in data["images"]:
             id = image["id"]
             filepath, filename = image["filepath"], image["filename"]
-            img_dir = os.path.join(BASE_DIR, filepath, filename)
+            img_dir = os.path.join(base_dir, filepath, filename)
             split.append((img_dir, id))
 
     return split
@@ -139,6 +137,8 @@ def parse_args():
     parser.add_argument('--set', dest='set_cfgs',
                         help='set config keys', default=None,
                         nargs=argparse.REMAINDER)
+    parser.add_argument("--base-dir", dest="base_dir", 
+                        help="Base directory to the images' folder", type=str)
 
     if len(sys.argv) == 1:
         parser.print_help()
@@ -219,7 +219,7 @@ if __name__ == '__main__':
     pprint.pprint(cfg)
     assert cfg.TEST.HAS_RPN
 
-    image_ids = load_image_ids(args.data_split)
+    image_ids = load_image_ids(args.base_dir, args.data_split)
     random.seed(10)
     random.shuffle(image_ids)
     # Split image ids between gpus
@@ -238,4 +238,3 @@ if __name__ == '__main__':
         procs.append(p)
     for p in procs:
         p.join()            
-                  
