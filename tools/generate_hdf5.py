@@ -4,13 +4,13 @@
 
 '''
 Example:
-python3 tools/generate_tsv.py \
+python3 tools/generate_hdf5.py \
         --gpu 0 \
         --cfg experiments/cfgs/faster_rcnn_end2end_resnet.yml \
         --def models/vg/ResNet-101/faster_rcnn_end2end_final/test.prototxt \
         --out uitviic_val_resnet101_faster_rcnn_genome.tsv \
         --net data/faster_rcnn_models/resnet101_faster_rcnn_final.caffemodel \
-        --split /mnt/f9e5fe40-5d81-46dc-8450-9c1e67eff197/Projects/object_relation_transformer/data/val.json \
+        --split /mnt/f9e5fe40-5d81-46dc-8450-9c1e67eff197/Projects/UIT-ViIC/val.json \
         --base-dir /mnt/f9e5fe40-5d81-46dc-8450-9c1e67eff197/Projects/UIT-ViIC
 '''
 
@@ -67,7 +67,9 @@ def get_detections_from_im(net, im_file, image_id, conf_thresh=0.2):
 
     cls_boxes = rois[:, 1:5] / im_scales[0]
     cls_prob = net.blobs['cls_prob'].data
-    pool5 = net.blobs['pool5_flat'].data
+    pool5 = net.blobs['pool5'].data
+
+    print(pool5.shape)
 
     # Keep only the best detections
     max_conf = np.zeros((rois.shape[0]))
@@ -128,11 +130,12 @@ def parse_args():
     return args
 
     
-def generate_tsv(net, image_ids, outfile):
+def generate_hdf5(net, image_ids, outfile):
   with open(outfile, 'a+') as tsvfile:
       writer = csv.DictWriter(tsvfile, delimiter = '\t', fieldnames = FIELDNAMES)   
       for im_file, image_id in tqdm(image_ids):
-        writer.writerow(get_detections_from_im(net, im_file, image_id))
+        # writer.writerow(get_detections_from_im(net, im_file, image_id))
+        get_detections_from_im(net, im_file, image_id)
      
 if __name__ == '__main__':
 
@@ -158,4 +161,4 @@ if __name__ == '__main__':
     caffe.set_device(gpu_id)
     net = caffe.Net(args.prototxt, caffe.TEST, weights=args.caffemodel)
 
-    generate_tsv(net, image_ids, args.outfile)
+    generate_hdf5(net, image_ids, args.outfile)
